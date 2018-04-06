@@ -1,0 +1,44 @@
+h1, p, ul {
+    text-align: center !important;
+}
+
+#myFavTable.thead {
+	text-align: center;
+}
+
+.{
+  background-color: #4CAF50;
+}
+
+input[type=text], select, input[type=time], [type=url] {
+  width: 100%;
+  display: inline-block;
+  margin: 8px;
+  padding: 12px 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+#form-control{
+  width: 100%;
+  display: inline-block;
+  margin: 8px;
+  padding: 12px 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+input[type=submit] {
+  width: 100%;
+  background-color: #4CAF50;
+  padding: 12px 20px;
+  color: white;
+  border-radius: 4px;
+}
+
+.form-group{
+  margin-left: auto;
+  margin-right: auto;
+  width: 60%;
+}

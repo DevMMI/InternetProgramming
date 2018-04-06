@@ -1,0 +1,34 @@
+function validateLoginDetails(req, res){
+  var data = req.body;
+  console.log(data);
+  var username = data.username;
+  var password = data.password;
+
+  hashed_password = sha1(password);
+  credential_valid = false;
+
+  sql.query('SELECT * FROM tbl_accounts', function(err,rows,fields) {
+    if (rows.length == 0);
+    else {
+      for (var i = 0 ; i < rows.length; i++){
+        // check if account and password occur together
+        console.log(rows[i].acc_login + " : " + username + "\n" + rows[i].acc_password + " : "+ hashed_password);
+        if(rows[i].acc_login == username){
+          console.log("reached1");
+          if(rows[i].acc_password == hashed_password){
+            console.log("reached2");
+            credential_valid = true;
+          }
+        }
+
+      } // end for loop
+    } // end else
+    console.log("credential is "+credential_valid);
+
+
+    res.end();
+
+  }); // end query
+
+
+}
