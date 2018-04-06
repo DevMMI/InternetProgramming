@@ -28,3 +28,15 @@ function post(path, params, method) { // src https://stackoverflow.com/questions
     document.body.appendChild(form);
     form.submit();
 }
+
+function handleLogin(){
+  var login = document.getElementById('username').value;
+  var password = document.getElementById('password').value;
+  var post = $.post( "/login", {"username": login, "password": password});
+
+  post.done(function(data){
+    console.log(data);
+
+  })
+
+}

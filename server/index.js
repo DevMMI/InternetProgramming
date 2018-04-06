@@ -51,23 +51,39 @@ app.listen(9007, () => console.log('Listening on port 9007!'));
 // It serves favourites.html present in client folder
 app.get('/',function(req, res) {
 	// ADD DETAILS...
-  //getLoginPage(req, res);
-  console.log(req.body);
-  res.sendFile(__dirname+"/html/login.html");
+  if(req.session.value) {
+    // redirect to favs
+    return res.redirect("/favorites");
+  }
+  else{
+    res.sendFile(__dirname+"/html/login.html");
+  }
 });
 
 // // GET method route for the favourites page.
 // It serves favourites.html present in client folder
 app.get('/favorites',function(req, res) {
 	// ADD DETAILS...
-  getFavoritesPage(req, res);
+  if(req.session.value) {
+    // redirect to favs
+    getFavoritesPage(req, res);
+  }
+  else{
+    return res.redirect("/login");
+  }
 });
 
 // GET method route for the addPlace page.
 // It serves addPlace.html present in client folder
 app.get('/addPlace',function(req, res) {
 	 // ADD DETAILS...
-   getAddPlacePage(req, res);
+   if(req.session.value) {
+     // redirect to favs
+     getAddPlacePage(req, res);
+   }
+   else{
+     return res.redirect("/login");
+   }
 });
 
 // GET method route for the login page.
@@ -76,7 +92,7 @@ app.get('/login',function(req, res) {
   // ADD DETAILS...
   if(req.session.value) {
     // redirect to favs
-    res.sendFile(__dirname+"/html/favorites.html");
+    return res.redirect("/favorites");
   }
   else{
     res.sendFile(__dirname+"/html/login.html");
@@ -85,10 +101,10 @@ app.get('/login',function(req, res) {
 
 // GET method to return the list of favourite places
 // The function queries the table tbl_places for the list of places and sends the response back to client
-app.get('/getListOfFavPlaces', function(req, res) {
-  // ADD DETAILS...
-  queryFavoritePlaces(req, res);
-});
+// app.get('/getListOfFavPlaces', function(req, res) {
+//   // ADD DETAILS...
+//   queryFavoritePlaces(req, res);
+// });
 
 // POST method to insert details of a new place to tbl_places table
 app.post('/postPlace', function(req, res) {
@@ -133,16 +149,54 @@ function getWelcomePage(req, res) {
     res.end();
   });
 }
-
+//queryFavoritePlaces
 function getFavoritesPage(req, res){
-  fs.readFile("html/favorites.html", function(err,html) {
+  console.log("12:30");
+  fs.readFile("html/favorites.html", "ascii", function(err,html) {
     if(err) {
       throw err;
     }
-    res.statusCode = 200;
-    res.setHeader('Content-type', 'text/html');
-    res.write(html);
-    res.end();
+    //inject html with retrieved sql tables
+    sql.query('SELECT * FROM tbl_places', function(err,rows,fields) {
+      if (rows.length == 0);
+      if (err);
+      else {
+        // Find the placement of the end of the first table row
+        // var re = '/<\/tr>';
+        // html.search(re)
+        arr = html.split('</tr>');
+        // add values to html
+        for (var i = 0 ; i < rows.length; i++){
+          console.log("getting favorites row");
+          // check if account and password occur together
+          // rows[i].acc_login
+          arr[0] += "<tr><td scope=\"col\">"+rows[i].place_name
+                + "</td><td>"
+                + rows[i].addr_line1
+                + rows[i].addr_line2
+                + "</td><td>"
+                + rows[i].open_time
+                + rows[i].close_time
+                + "</td><td>"
+                + rows[i].add_info
+                + "</td><td>"
+                + rows[i].add_info_url
+                + "</td></tr>";
+
+
+        } // end for loop
+      } // end else
+      html = arr[0] + arr[1];
+
+
+      res.statusCode = 200;
+      res.setHeader('Content-type', 'text/html');
+      res.write(html);
+      res.end();
+
+    }); // end query
+
+
 
   })
 }
@@ -175,7 +229,7 @@ function getLoginPage(req, res){
 
 function queryFavoritePlaces(req, res){
 
-  con.connect(function(err) {
+  sql.connect(function(err) {
   if (err) throw err;
     console.log("Connected!");
     con.query(sql, function (err, result) {
@@ -188,7 +242,26 @@ function queryFavoritePlaces(req, res){
 
 function createFavoritePlaces(req, res){
   console.log("Create favorite place");
-  res.end();
+  var data = req.body;
+
+  // Parameterized Insert
+  var rowToBeInserted = {
+      place_name: data.placename,
+      addr_line1: data.addressline1,
+      addr_line2 : data.addressline2,
+      open_time: data.opentime,
+      close_time: data.closetime,
+      add_info: data.additionalinfo,
+      add_info_url: data.additionalinfourl
+    };
+
+  sql.query('INSERT tbl_places SET ?', rowToBeInserted, function(err, result) {  //Parameterized insert
+      if(err) throw err;
+      console.log("Values inserted");
+    });
+
+
+  return res.redirect("/favorites");
 }
 
 function validateLoginDetails(req, res){
@@ -219,9 +292,13 @@ function validateLoginDetails(req, res){
 
       } // end for loop
     } // end else
-    console.log("credential is "+credential_valid);
 
-
+    // Handle incorrect login
+    console.log("sending negative response");
+    res.statusCode = 211;
+    res.setHeader('Content-type', 'text/html');
+    res.write("wrong");
+    res.end();
 
   }); // end query
 
@@ -236,7 +313,7 @@ function logoutSession(req, res){
   } else {
     console.log ("Successfully Destroyed Session!");
     req.session.destroy();
-    res.send("Session Complete!");
+    return res.redirect("/login");
     //res.redirect('/login');
   }
 }
